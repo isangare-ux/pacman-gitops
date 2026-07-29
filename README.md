@@ -1,4 +1,3 @@
-
 # Pacman GitOps
 
 ## Projektübersicht
