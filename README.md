@@ -1,5 +1,17 @@
 # Pacman GitOps
 
+
+
+## Continuous Integration
+
+Die GitHub Actions Pipeline führt automatisch folgende Prüfungen aus:
+
+- Installation der Abhängigkeiten
+- Docker Compose Validierung
+- Healthcheck der Services
+- HTTP Smoke Test
+- Docker Image Build
+
 ## Projektübersicht
 
 Dieses Repository enthält sämtliche Kubernetes-Ressourcen und GitOps-Konfigurationen für die Bereitstellung der Pacman-Anwendung.
