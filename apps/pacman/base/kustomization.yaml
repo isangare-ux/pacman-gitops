@@ -1,0 +1,45 @@
+# Basis-Kustomization für die Pacman-Anwendung.
+#
+# Dies ist die "base": eine Sammlung aller Kubernetes-Ressourcen, die in
+# JEDER Umgebung (dev/prod) gleich sind. Die Overlays unter overlays/dev
+# und overlays/prod bauen auf dieser base auf und passen nur das an, was
+# sich pro Umgebung unterscheidet (z. B. Namespace, Labels).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Alle Dateien, aus denen kustomize die Kubernetes-Manifeste zusammenbaut.
+# Pacman-Anwendung: deployment/service/configmap/serviceaccount/ingress
+# Betrieb & Absicherung: hpa (Autoscaling), pdb (Verfügbarkeit bei Updates),
+#   networkpolicy (erlaubter Netzwerkverkehr), limitrange/resourcequota
+#   (CPU/RAM-Grenzen pro Namespace)
+# MongoDB: eigenes StatefulSet (persistenter Speicher), Service, Init-ConfigMap
+# Backup: CronJob + PVC für regelmäßige Datenbank-Backups
+resources:
+  - deployment.yaml
+  - service.yaml
+  - configmap.yaml
+  - serviceaccount.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - networkpolicy.yaml
+  - limitrange.yaml
+  - resourcequota.yaml
+  - mongodb-statefulset.yaml
+  - mongodb-service.yaml
+  - mongodb-init-configmap.yaml
+  - backup-cronjob.yaml
+  - backup-pvc.yaml
+
+# Label, das kustomize automatisch auf alle oben gelisteten Ressourcen
+# anwendet (inkl. Selektoren wie Service/Deployment matchLabels dank
+# includeSelectors: true). Dient dazu, alle zusammengehörigen Objekte im
+# Cluster eindeutig als Teil der Pacman-Anwendung zu erkennen
+# (z. B. für "kubectl get all -l app=pacman").
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: pacman                # Name der Anwendung selbst
+      app.kubernetes.io/part-of: pacman-platform     # Übergeordnetes System, zu dem diese App gehört
+      app.kubernetes.io/managed-by: argocd           # Tool, das Deployment/Sync steuert (GitOps via ArgoCD)
+      responsibility: devops                         # Team, das für Betrieb/Wartung zuständig ist

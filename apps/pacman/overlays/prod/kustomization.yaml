@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pacman-prod
+
+resources:
+  - namespace.yaml
+  - ../../base
+
+labels:
+  - pairs:
+      app.kubernetes.io/instance: pacman-prod  # Eindeutige Instanz-ID dieser Bereitstellung (grenzt prod von dev ab)
+      environment: prod                         # Kennzeichnet die Umgebung als Produktion

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pacman-dev
+  labels:
+    app.kubernetes.io/part-of: pacman
+    app.kubernetes.io/instance: pacman-dev
+    environment: dev
+    responsibility: devops

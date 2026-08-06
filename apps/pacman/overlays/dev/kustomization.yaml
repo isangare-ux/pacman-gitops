@@ -1,0 +1,27 @@
+# Overlay für die Dev-Umgebung.
+#
+# Ein Overlay verändert NICHT die base selbst, sondern nimmt sie als
+# Grundlage und wendet zusätzliche Anpassungen an, die nur für diese eine
+# Umgebung gelten. Dadurch bleibt die base wiederverwendbar für dev UND
+# prod, ohne dass Konfiguration doppelt gepflegt werden muss.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Alle Ressourcen aus der base werden in diesen Namespace deployt,
+# statt in "default". Trennt dev vollständig von prod im Cluster.
+namespace: pacman-dev
+
+# Verweist auf die base-Kustomization statt einzelne Dateien erneut
+# aufzulisten — die eigentlichen Kubernetes-Manifeste kommen von dort.
+resources:
+  - namespace.yaml
+  - ../../base
+
+# Zusätzliches Label, das über commonLabels aus der base hinaus gesetzt
+# wird. Damit lassen sich dev-Ressourcen im Cluster klar von prod
+# unterscheiden (z. B. "kubectl get all -l environment=dev").
+
+labels:
+  - pairs:
+      app.kubernetes.io/instance: pacman-dev   # Eindeutige Instanz-ID dieser Bereitstellung (grenzt dev von prod ab)
+      environment: dev                          # Kennzeichnet die Umgebung als Entwicklung
