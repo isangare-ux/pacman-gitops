@@ -1,9 +1,14 @@
+# Namespace für die Dev-Umgebung der Pacman-Anwendung.
+#
+# Wird vom overlays/dev/kustomization.yaml als Ressource eingebunden und
+# sorgt dafür, dass alle Ressourcen aus der base beim Deploy in
+# "pacman-dev" statt in "default" landen — getrennt von prod.
 apiVersion: v1
 kind: Namespace
 metadata:
   name: pacman-dev
   labels:
-    app.kubernetes.io/part-of: pacman
-    app.kubernetes.io/instance: pacman-dev
-    environment: dev
-    responsibility: devops
+    app.kubernetes.io/part-of: pacman        # Übergeordnetes System, zu dem dieser Namespace gehört
+    app.kubernetes.io/instance: pacman-dev   # Eindeutige Instanz-ID dieser Bereitstellung (grenzt dev von prod ab)
+    environment: dev                          # Kennzeichnet die Umgebung als Entwicklung
+    responsibility: devops                    # Team, das für Betrieb/Wartung zuständig ist

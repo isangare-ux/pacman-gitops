@@ -25,3 +25,7 @@ labels:
   - pairs:
       app.kubernetes.io/instance: pacman-dev   # Eindeutige Instanz-ID dieser Bereitstellung (grenzt dev von prod ab)
       environment: dev                          # Kennzeichnet die Umgebung als Entwicklung
+
+replicas:
+  - name: pacman
+    count: 1
