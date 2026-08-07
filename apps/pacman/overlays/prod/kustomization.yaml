@@ -11,3 +11,12 @@ labels:
   - pairs:
       app.kubernetes.io/instance: pacman-prod  # Eindeutige Instanz-ID dieser Bereitstellung (grenzt prod von dev ab)
       environment: prod                         # Kennzeichnet die Umgebung als Produktion
+
+replicas:
+  - name: pacman
+    count: 3
+
+images:
+  - name: ghcr.io/isangare-ux/pacman-app
+    newTag: dfe16c3c188e5011a8fa91324524fb63aaf91a91
+    

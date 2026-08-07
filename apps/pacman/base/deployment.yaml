@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: pacman
+  labels:
+    app.kubernetes.io/name: pacman
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: pacman-platform
+    app.kubernetes.io/managed-by: argocd
+    responsibility: devops
+
+spec:
+  # Neutraler Basiswert.
+  # Dev und Prod überschreiben diesen Wert über ihre Overlays.
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pacman
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      # Während eines Updates darf ein zusätzlicher Pod erstellt werden.
+      maxSurge: 1
+
+      # Ein vorhandener Pod wird erst beendet,
+      # wenn der neue Pod verfügbar ist.
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: pacman
+        app.kubernetes.io/component: application
+        app.kubernetes.io/part-of: pacman-platform
+        app.kubernetes.io/managed-by: argocd
+        responsibility: devops
+
+    spec:
+      # Eigene Kubernetes-Identität der Anwendung.
+      serviceAccountName: pacman
+
+      # Zeit für ein kontrolliertes Herunterfahren des Containers.
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: pacman
+
+          # GHCR-Image mit unveränderlichem Commit-SHA-Tag.
+          image: ghcr.io/isangare-ux/pacman-app:dfe16c3c188e5011a8fa91324524fb63aaf91a91
+
+          # Bei einem unveränderlichen Commit-SHA-Tag ist IfNotPresent
+          # nachvollziehbar und vermeidet unnötige Downloads.
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
