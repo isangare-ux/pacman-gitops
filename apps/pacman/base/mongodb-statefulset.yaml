@@ -1,0 +1,139 @@
+# StatefulSet für MongoDB.
+#
+# Im Gegensatz zum Deployment der Pacman-Anwendung (deployment.yaml) braucht
+# die Datenbank eine stabile Identität: fester Pod-Name (mongodb-0) und
+# stabiler DNS-Name über den headless Service (mongodb-service.yaml,
+# clusterIP: None). Ein Deployment würde bei jedem Neustart einen Pod mit
+# zufälligem Namens-Suffix erzeugen — für eine Datenbank ungeeignet, da
+# Clients (bzw. hier vor allem das StatefulSet selbst) sich auf einen
+# konstanten Namen verlassen können müssen.
+apiVersion: apps/v1
+kind: StatefulSet
+
+metadata:
+  name: mongodb
+
+  # Gleiches Labelschema wie bei den übrigen Pacman-Ressourcen (siehe
+  # deployment.yaml, service.yaml, serviceaccount.yaml), damit MongoDB
+  # als Teil derselben Plattform erkennbar bleibt. component: database
+  # grenzt diese Ressource zusätzlich von component: application ab.
+  labels:
+    app.kubernetes.io/component: database         # Rolle dieser Ressource innerhalb der App: die Datenbank
+    app.kubernetes.io/managed-by: argocd           # Tool, das Deployment/Sync steuert (GitOps via ArgoCD)
+    app.kubernetes.io/name: pacman                 # Name der Gesamtanwendung, zu der diese Ressource gehört
+    app.kubernetes.io/part-of: pacman-platform     # Übergeordnetes System, zu dem diese Ressource gehört
+    responsibility: devops                          # Team, das für Betrieb/Wartung zuständig ist
+
+spec:
+  # Muss auf den Namen des headless Service verweisen (mongodb-service.yaml).
+  # Kubernetes nutzt diesen Service, um dem Pod den stabilen DNS-Namen
+  # "mongodb-0.mongodb" innerhalb des Namespaces zu vergeben.
+  serviceName: mongodb
+
+  # Nur eine Instanz: MongoDB läuft hier ohne Replica-Set. Ein zweiter Pod
+  # würde sich kein gemeinsames Datenverzeichnis teilen können, ohne
+  # zusätzliche Replikations-Konfiguration würden mehrere Instanzen also
+  # unabhängige, inkonsistente Datenbestände führen.
+  replicas: 1
+
+  # Bestimmt, welche Pods zu diesem StatefulSet gehören. Bewusst enger
+  # gefasst als bei den Plattform-weiten Labels oben (nur component +
+  # name), damit dieser Selector ausschließlich die MongoDB-Pods trifft
+  # und sich nicht mit dem Selector des Pacman-Deployments überschneidet.
+  # Muss exakt den Labels unter template.metadata.labels entsprechen.
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: database
+      app.kubernetes.io/name: mongodb
+
+  template:
+    metadata:
+      # Labels, die tatsächlich auf den MongoDB-Pod angewendet werden.
+      # component/name müssen mit dem selector oben übereinstimmen,
+      # part-of/responsibility folgen dem allgemeinen Plattformschema.
+      labels:
+        app.kubernetes.io/component: database
+        app.kubernetes.io/name: mongodb
+        app.kubernetes.io/part-of: pacman-platform
+        responsibility: devops
+
+    spec:
+      containers:
+        - name: mongodb
+
+          # Gleiche Version wie im lokalen docker-compose-Setup, damit
+          # sich Dev/Prod und die lokale Entwicklungsumgebung konsistent
+          # verhalten (siehe textdateien/compose_config_nachweis.txt).
+          image: mongo:4.4.30-focal
+
+          # Anders als beim Pacman-Image (deployment.yaml) ist dies kein
+          # unveränderlicher Commit-SHA-Tag, sondern ein fest gewählter,
+          # stabiler Versions-Tag von Docker Hub. IfNotPresent vermeidet
+          # trotzdem unnötige erneute Downloads, solange sich der lokale
+          # Cache-Stand des Tags im Cluster nicht ändert.
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: root-username
+
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: root-password
+
+            - name: MONGO_INITDB_DATABASE
+              value: pacman
+
+            - name: MONGO_APP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: app-username
+
+            - name: MONGO_APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: app-password
+
+          ports:
+            - name: mongodb
+              containerPort: 27017
+              protocol: TCP
+
+          volumeMounts:
+            - name: mongodb-init
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+
+            - name: mongodb-data
+              mountPath: /data/db
+
+      # Ordnet den oben referenzierten Volume-Namen eine konkrete Quelle zu.
+      # "mongodb-data" steht NICHT hier, sondern kommt aus
+      # volumeClaimTemplates weiter unten (spec-Ebene des StatefulSets) —
+      # dort wird pro Pod automatisch ein eigenes PVC erzeugt.
+      volumes:
+        - name: mongodb-init
+          configMap:
+            name: mongodb-init
+
+  # Erzeugt pro Pod automatisch ein eigenes PersistentVolumeClaim
+  # (hier: mongodb-data-mongodb-0), das unabhängig vom Pod-Lebenszyklus
+  # bestehen bleibt. Muss auf spec-Ebene des StatefulSets stehen, NICHT
+  # innerhalb von template.spec — PodSpec kennt dieses Feld nicht.
+  volumeClaimTemplates:
+    - metadata:
+        name: mongodb-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: hostpath
+        resources:
+          requests:
+            storage: 1Gi

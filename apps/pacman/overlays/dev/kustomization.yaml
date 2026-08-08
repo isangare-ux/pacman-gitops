@@ -14,7 +14,7 @@ namespace: pacman-dev
 # Verweist auf die base-Kustomization statt einzelne Dateien erneut
 # aufzulisten — die eigentlichen Kubernetes-Manifeste kommen von dort.
 resources:
-  - namespace.yaml
+  - namespace.yaml   # Legt den Namespace "pacman-dev" an, bevor die base-Ressourcen hineindeployt werden
   - ../../base
 
 # Zusätzliches Label, das über commonLabels aus der base hinaus gesetzt

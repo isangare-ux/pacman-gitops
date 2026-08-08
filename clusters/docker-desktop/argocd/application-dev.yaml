@@ -1,0 +1,38 @@
+# Argo CD Application für die Dev-Umgebung von Pacman.
+#
+# Dieses Objekt ist es, das Argo CD überhaupt erst anweist, dieses Repo zu
+# beobachten und den Inhalt von apps/pacman/overlays/dev automatisch in
+# den Namespace pacman-dev zu synchronisieren. Ohne dieses Application-
+# Objekt im Cluster passiert GAR NICHTS automatisch — Kustomize-Dateien
+# im Repo allein deployen sich nicht von selbst.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: pacman-dev
+  namespace: argocd
+  labels:
+    environment: dev
+
+spec:
+  project: pacman
+
+  source:
+    repoURL: https://github.com/isangare-ux/pacman-gitops.git
+    targetRevision: main
+    path: apps/pacman/overlays/dev
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pacman-dev
+
+  syncPolicy:
+    # Dev soll jede Änderung auf main ohne manuellen Eingriff übernehmen.
+    automated:
+      prune: true    # Entfernt Ressourcen aus dem Cluster, die aus dem Repo gelöscht wurden.
+      selfHeal: true  # Macht manuelle kubectl-Änderungen am Cluster rückgängig, sync-Ziel ist immer Git.
+
+    syncOptions:
+      # Legt den Namespace an, falls er noch nicht existiert (hier bereits
+      # zusätzlich über overlays/dev/namespace.yaml als Ressource verwaltet).
+      - CreateNamespace=true

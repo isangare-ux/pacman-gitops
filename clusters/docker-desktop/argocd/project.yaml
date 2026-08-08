@@ -1,0 +1,38 @@
+# Argo CD AppProject für Pacman.
+#
+# Ein AppProject grenzt ein, was Applications innerhalb dieses Projekts
+# überhaupt tun dürfen: aus welchem Repo sie syncen, in welche
+# Namespaces/Cluster sie deployen und welche cluster-weiten Ressourcentypen
+# sie anlegen dürfen. Ohne eigenes Projekt würden Applications das
+# eingebaute "default"-Projekt nutzen, das per default alles erlaubt —
+# hier wird das bewusst auf das Nötige für Pacman eingeschränkt.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+
+metadata:
+  name: pacman
+  namespace: argocd
+
+spec:
+  description: Pacman-Anwendung (Dev- und Prod-Umgebung)
+
+  # Nur dieses Repository darf von Applications dieses Projekts als Quelle
+  # verwendet werden.
+  sourceRepos:
+    - https://github.com/isangare-ux/pacman-gitops.git
+
+  # Erlaubte Ziel-Namespaces auf dem Cluster, in den Argo CD selbst
+  # installiert ist (in-cluster: https://kubernetes.default.svc).
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: pacman-dev
+    - server: https://kubernetes.default.svc
+      namespace: pacman-prod
+
+  # Cluster-weite (nicht-namespaced) Ressourcentypen, die Applications
+  # dieses Projekts anlegen dürfen. Nur Namespace, da overlays/dev und
+  # overlays/prod jeweils ihre eigene namespace.yaml mitbringen — sonst
+  # ist bewusst nichts cluster-weit erlaubt.
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace

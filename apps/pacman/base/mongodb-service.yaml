@@ -1,0 +1,28 @@
+# Headless Service für MongoDB.
+#
+# clusterIP: None macht diesen Service "headless" — statt einer virtuellen
+# IP mit Load-Balancing liefert DNS direkt die IP(s) der dahinterliegenden
+# Pod(s) zurück. Das ist die empfohlene Anbindung für ein StatefulSet
+# (mongodb-statefulset.yaml), da so jeder Pod stabil und einzeln über
+# seinen DNS-Namen ansprechbar ist statt willkürlich hinter einer
+# gemeinsamen IP zu landen.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  labels:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: pacman
+spec:
+  clusterIP: None
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+      protocol: TCP
+  # Wählt die Pods aus, an die dieser Service weiterleitet — hier die
+  # Pods des mongodb-StatefulSets anhand ihrer Labels.
+  selector:
+    app.kubernetes.io/name: mongodb
+    app.kubernetes.io/component: database

@@ -1,0 +1,31 @@
+# Argo CD Application für die Prod-Umgebung von Pacman.
+#
+# Struktur analog zu application-dev.yaml, zeigt aber auf
+# apps/pacman/overlays/prod und den Namespace pacman-prod.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: pacman-prod
+  namespace: argocd
+  labels:
+    environment: prod
+
+spec:
+  project: pacman
+
+  source:
+    repoURL: https://github.com/isangare-ux/pacman-gitops.git
+    targetRevision: main
+    path: apps/pacman/overlays/prod
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pacman-prod
+
+  # Bewusst KEIN automated-Block: Prod soll nicht automatisch bei jedem
+  # Commit auf main aktualisiert werden. Sync erfolgt kontrolliert, z. B.
+  # über "argocd app sync pacman-prod" oder per Klick in der Argo CD UI,
+  # nachdem die Änderung zuvor in Dev verifiziert wurde.
+  syncOptions:
+    - CreateNamespace=true

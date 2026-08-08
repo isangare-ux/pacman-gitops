@@ -24,13 +24,13 @@ resources:
   - pdb.yaml
   - networkpolicy.yaml
   - limitrange.yaml
+  - mongodb-service.yaml
   - resourcequota.yaml
   - mongodb-statefulset.yaml
-  - mongodb-service.yaml
   - mongodb-init-configmap.yaml
   - backup-cronjob.yaml
   - backup-pvc.yaml
-
+  
 # Label, das kustomize automatisch auf alle oben gelisteten Ressourcen
 # anwendet (inkl. Selektoren wie Service/Deployment matchLabels dank
 # includeSelectors: true). Dient dazu, alle zusammengehörigen Objekte im

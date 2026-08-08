@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongodb-init
+  labels:
+    app.kubernetes.io/component: database
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: pacman
+    app.kubernetes.io/part-of: pacman-platform
+    responsibility: devops
+data:
+  01-create-pacman-user.js: |
+    const databaseName = _getEnv("MONGO_INITDB_DATABASE");
+    const applicationUser = _getEnv("MONGO_APP_USERNAME");
+    const applicationPassword = _getEnv("MONGO_APP_PASSWORD");
+
+    if (!databaseName) {
+      throw new Error("MONGO_INITDB_DATABASE ist nicht gesetzt.");
+    }
+
+    if (!applicationUser) {
+      throw new Error("MONGO_APP_USERNAME ist nicht gesetzt.");
+    }
+
+    if (!applicationPassword) {
+      throw new Error("MONGO_APP_PASSWORD ist nicht gesetzt.");
+    }
+
+    const pacmanDatabase = db.getSiblingDB(databaseName);
+
+    if (pacmanDatabase.getUser(applicationUser) === null) {
+      pacmanDatabase.createUser({
+        user: applicationUser,
+        pwd: applicationPassword,
+        roles: [
+          {
+            role: "readWrite",
+            db: databaseName
+          }
+        ]
+      });
+
+      print("Pacman-Anwendungsbenutzer wurde erstellt.");
+    } else {
+      print("Pacman-Anwendungsbenutzer ist bereits vorhanden.");
+    }
+---
