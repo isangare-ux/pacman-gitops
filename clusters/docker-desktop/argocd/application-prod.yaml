@@ -27,5 +27,6 @@ spec:
   # Commit auf main aktualisiert werden. Sync erfolgt kontrolliert, z. B.
   # über "argocd app sync pacman-prod" oder per Klick in der Argo CD UI,
   # nachdem die Änderung zuvor in Dev verifiziert wurde.
-  syncOptions:
-    - CreateNamespace=true
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
