@@ -59,3 +59,22 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+
+          env:
+            - name: MONGO_SERVICE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: pacman-config
+                  key: MONGO_SERVICE_HOST
+
+            - name: MONGO_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: pacman-config
+                  key: MONGO_DATABASE
+
+            - name: MY_MONGO_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: pacman-config
+                  key: MY_MONGO_PORT
