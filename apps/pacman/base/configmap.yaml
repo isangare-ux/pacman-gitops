@@ -1,0 +1,36 @@
+# ConfigMap für die Pacman-Anwendung.
+#
+# Enthält ausschließlich nicht-sensible Konfigurationswerte. Zugangsdaten
+# für MongoDB (MONGO_AUTH_USER/MONGO_AUTH_PWD) gehören NICHT hierher,
+# sondern in das Secret "pacman-credentials" (siehe secret.example.yaml
+# und scripts/create-local-secrets.sh).
+#
+# Die Variablennamen entsprechen exakt dem, was die Anwendung selbst
+# ausliest (siehe pacman-app/lib/config.js und pacman-app/bin/server.js).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pacman-config
+  labels:
+    app.kubernetes.io/name: pacman
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: pacman-platform
+    app.kubernetes.io/managed-by: argocd
+    responsibility: devops
+data:
+  # Port, auf dem der Node-Prozess im Container lauscht (bin/server.js).
+  PORT: "8080"
+
+  # DNS-Name des headless MongoDB-Service (mongodb-service.yaml).
+  # Innerhalb desselben Namespace reicht der Servicename ohne FQDN.
+  MONGO_SERVICE_HOST: "mongodb"
+
+  # Port, auf dem MongoDB lauscht (mongodb-statefulset.yaml, Port 27017).
+  MY_MONGO_PORT: "27017"
+
+  # Name der Anwendungsdatenbank, identisch zu MONGO_INITDB_DATABASE im
+  # mongodb-statefulset.yaml und zur Datenbank aus dem persistenz_und_datenbankplan.
+  MONGO_DATABASE: "pacman"
+
+  # MongoDB läuft im Cluster ohne TLS-Terminierung auf Verbindungsebene.
+  MONGO_USE_SSL: "false"
