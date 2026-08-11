@@ -46,8 +46,13 @@ spec:
       terminationGracePeriodSeconds: 30
 
       # Pod-weiter SecurityContext: gilt für alle Container im Pod.
+      # runAsUser: 1000 entspricht dem "node"-Benutzer aus dem Dockerfile
+      # (node:22-alpine, USER node). Ohne diese numerische UID kann das
+      # Kubelet runAsNonRoot bei einem namentlichen Image-User nicht
+      # verifizieren (CreateContainerConfigError).
       securityContext:
         runAsNonRoot: true
+        runAsUser: 1000
         seccompProfile:
           type: RuntimeDefault
 
