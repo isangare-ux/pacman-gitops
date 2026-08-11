@@ -45,6 +45,12 @@ spec:
       # Zeit für ein kontrolliertes Herunterfahren des Containers.
       terminationGracePeriodSeconds: 30
 
+      # Pod-weiter SecurityContext: gilt für alle Container im Pod.
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+
       containers:
         - name: pacman
 
@@ -55,11 +61,58 @@ spec:
           # nachvollziehbar und vermeidet unnötige Downloads.
           imagePullPolicy: IfNotPresent
 
+          # Container-spezifischer SecurityContext.
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+          resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 256Mi
+
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
 
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 12
+            successThreshold: 1
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+            successThreshold: 1
+
+          readinessProbe:
+              httpGet:
+                path: /highscores/list
+                port: http
+              initialDelaySeconds: 0
+              periodSeconds: 5
+              timeoutSeconds: 2
+              failureThreshold: 3
+              successThreshold: 1
+
+          # MongoDB-Verbindungsdaten aus der ConfigMap "pacman-config" statt
+          # fest verdrahtet — Anpassungen erfordern keine Änderung an dieser
+          # Datei, nur ein Update der ConfigMap.
           env:
             - name: MONGO_SERVICE_HOST
               valueFrom:

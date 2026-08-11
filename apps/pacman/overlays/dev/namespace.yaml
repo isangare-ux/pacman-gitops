@@ -6,7 +6,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: pacman-dev
+  name: pacman-dev                           # Name des Namespace, in dem die Dev-Ressourcen laufen
   labels:
     app.kubernetes.io/part-of: pacman        # Übergeordnetes System, zu dem dieser Namespace gehört
     app.kubernetes.io/instance: pacman-dev   # Eindeutige Instanz-ID dieser Bereitstellung (grenzt dev von prod ab)

@@ -72,6 +72,17 @@ spec:
           # trotzdem unnötige erneute Downloads, solange sich der lokale
           # Cache-Stand des Tags im Cluster nicht ändert.
           imagePullPolicy: IfNotPresent
+          
+          resources:
+              requests:
+                cpu: 250m
+                memory: 256Mi
+              limits:
+                cpu: 1000m
+                memory: 512Mi
+
+          
+
 
           env:
             - name: MONGO_INITDB_ROOT_USERNAME
