@@ -136,3 +136,20 @@ spec:
                 configMapKeyRef:
                   name: pacman-config
                   key: MY_MONGO_PORT
+
+            # MongoDB-Zugangsdaten aus dem Secret "mongodb-credentials" —
+            # bewusst nicht über Kustomize/Git verwaltet (siehe
+            # apps/pacman/base/secret.example.yaml). Keys app-username/
+            # app-password entsprechen dem App-User, den
+            # mongodb-init-configmap.yaml beim Start von MongoDB anlegt.
+            - name: MONGO_AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: app-username
+
+            - name: MONGO_AUTH_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: app-password
