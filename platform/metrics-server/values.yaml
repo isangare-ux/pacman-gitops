@@ -1,0 +1,33 @@
+# metrics-server Helm-Chart-Werte
+# Chart: metrics-server/metrics-server
+# Chart-Version: 3.13.1
+# App-Version (metrics-server): 0.8.1
+# Repository: https://kubernetes-sigs.github.io/metrics-server/
+
+replicas: 1
+
+apiService:
+  create: true
+
+service:
+  type: ClusterIP
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 200Mi
+
+# --kubelet-insecure-tls ist NICHT vorsorglich gesetzt, sondern erst nach
+# nachgewiesenem Fehler ergänzt worden. Ohne diesen Parameter lieferten die
+# metrics-server-Logs auf Docker Desktop durchgehend:
+#   Failed to scrape node" err="Get \"https://192.168.65.3:10250/metrics/resource\":
+#   tls: failed to verify certificate: x509: cannot validate certificate for
+#   192.168.65.3 because it doesn't contain any IP SANs" node="docker-desktop"
+# Ursache: Das von Docker Desktop für den Kubelet auf dem einzigen Node
+# ausgestellte Zertifikat enthält keine passenden IP-SANs, wodurch die
+# standardmäßige TLS-Verifizierung durch metrics-server fehlschlägt.
+# Diese Einstellung deaktiviert die Kubelet-Zertifikatsprüfung und ist NUR
+# für diese lokale Docker-Desktop-Testumgebung vertretbar, nicht für einen
+# produktiven Cluster mit korrekt ausgestellten Kubelet-Zertifikaten.
+args:
+  - --kubelet-insecure-tls

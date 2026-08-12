@@ -1,0 +1,72 @@
+# HorizontalPodAutoscaler für das Pacman-Deployment (Produktion).
+#
+# Skaliert die Pod-Anzahl automatisch anhand der CPU-Auslastung, statt eine
+# feste Replikanzahl dauerhaft vorzuhalten. Werte sind bewusst auf die
+# Produktionsanforderungen ausgelegt (siehe Begründungen unten).
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pacman
+  labels:
+    app.kubernetes.io/name: pacman
+    app.kubernetes.io/component: frontend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pacman
+
+  # Mindestzahl 3: entspricht der produktiven Grundlast (siehe
+  # overlays/prod/kustomization.yaml, replicas: count 3) und stellt sicher,
+  # dass bei einem Knoten- oder Pod-Ausfall weiterhin mindestens zwei
+  # Instanzen erreichbar bleiben (Hochverfügbarkeit statt Single Point of
+  # Failure).
+  minReplicas: 3
+  # Höchstzahl 6: doppelte Grundlast als Kapazitätsreserve für Lastspitzen,
+  # bewusst begrenzt, um bei fehlerhaften/dauerhaften Lastspitzen keine
+  # unkontrollierte Skalierung (und damit Ressourcen-/Kostenexplosion) auf
+  # dieser kleinen Trainingsumgebung zuzulassen.
+  maxReplicas: 6
+
+  behavior:
+    scaleUp:
+      # Keine Verzögerung beim Hochskalieren: Nutzer sollen bei
+      # Lastanstieg so schnell wie möglich zusätzliche Kapazität bekommen.
+      stabilizationWindowSeconds: 0
+      policies:
+        # Pro Minute maximal 2 zusätzliche Pods ODER eine Verdopplung
+        # (100 %) — je nachdem, was mehr Kapazität bringt (selectPolicy:
+        # Max). Verhindert einen einzelnen Sprung auf sehr viele Pods durch
+        # eine kurze Lastspitze.
+        - type: Pods
+          value: 2
+          periodSeconds: 60
+        - type: Percent
+          value: 100
+          periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      # 5 Minuten Beobachtungsfenster vor dem Herunterskalieren, damit ein
+      # kurzer Lastabfall nicht sofort Pods abbaut, die kurz danach wieder
+      # gebraucht würden (Flapping-Schutz).
+      stabilizationWindowSeconds: 300
+      policies:
+        # Pro Minute höchstens 50 % der aktuellen Pods abbauen, statt in
+        # einem Schritt bis auf minReplicas zurückzufallen.
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+      selectPolicy: Max
+
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          # 60 % des CPU-Requests (100m aus deployment.yaml) als
+          # Skalierungsschwelle: skaliert bereits deutlich vor Erreichen
+          # des CPU-Limits (500m) hoch und lässt dabei genug Puffer, um
+          # kurze Lastspitzen abzufedern, ohne bei jeder kleinen Schwankung
+          # sofort zu reagieren.
+          averageUtilization: 60
