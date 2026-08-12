@@ -29,3 +29,22 @@ labels:
 replicas:
   - name: pacman
     count: 1
+
+# Umgebungsspezifische Anpassung des Ingress-Hostnamens.
+# Die Base verwendet pacman.local für Produktion.
+# Im Dev-Overlay wird dieser Wert auf pacman-dev.local geändert.
+patches:
+  - target:
+      kind: Ingress
+      name: pacman
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: pacman-dev.local
+
+  # Der HPA aus der base ist auf die produktive Grundlast (minReplicas: 3)
+  # ausgelegt und würde in Dev die bewusst niedrige Einzel-Instanz
+  # (replicas: count 1, siehe oben) sofort wieder auf 3 hochskalieren.
+  # Autoscaling ist in dieser Test-/Dev-Umgebung nicht vorgesehen, daher
+  # wird die Ressource hier gezielt per Patch entfernt.
+  - path: hpa-delete-patch.yaml
