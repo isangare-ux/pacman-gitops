@@ -39,4 +39,49 @@ patches:
       - op: add
         path: /spec/template/metadata/labels/environment
         value: prod
-    
+
+  # Prod erhält eine größere ResourceQuota als Dev.
+  # Die Werte berücksichtigen bis zu 6 Pacman-Replikate,
+  # MongoDB sowie Reserve für Rollout und Tests.
+  - target:
+      kind: ResourceQuota
+      name: pacman-namespace-quota
+    patch: |-
+      - op: replace
+        path: /spec/hard/requests.cpu
+        value: "1500m"
+      - op: replace
+        path: /spec/hard/requests.memory
+        value: "2Gi"
+      - op: replace
+        path: /spec/hard/limits.cpu
+        value: "6"
+      - op: replace
+        path: /spec/hard/limits.memory
+        value: "3Gi"
+      - op: replace
+        path: /spec/hard/pods
+        value: "12"
+      - op: replace
+        path: /spec/hard/persistentvolumeclaims
+        value: "3"
+
+  # Prod erlaubt größere Container-Grenzen als Dev (siehe base/limitrange.yaml
+  # für die neutralen Basiswerte), abgestimmt auf die tatsächlichen
+  # Pacman-Ressourcenwerte (CPU Request 100m/Limit 500m) mit Reserve nach oben.
+  - target:
+      kind: LimitRange
+      name: pacman-container-limits
+    patch: |-
+      - op: replace
+        path: /spec/limits/0/min/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/limits/0/min/memory
+        value: "128Mi"
+      - op: replace
+        path: /spec/limits/0/max/cpu
+        value: "2"
+      - op: replace
+        path: /spec/limits/0/max/memory
+        value: "1Gi"
