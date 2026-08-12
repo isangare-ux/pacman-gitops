@@ -17,7 +17,7 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/name: pacman
-      app.kubernetes.io/component: frontend
+      app.kubernetes.io/component: application
       environment: prod
   policyTypes:
     - Ingress
@@ -42,7 +42,7 @@ spec:
   podSelector:
     matchLabels:
       app.kubernetes.io/name: pacman
-      app.kubernetes.io/component: frontend
+      app.kubernetes.io/component: application
       environment: prod
   policyTypes:
     - Egress
@@ -50,7 +50,7 @@ spec:
     - to:
         - podSelector:
             matchLabels:
-              app.kubernetes.io/name: pacman
+              app.kubernetes.io/name: mongodb
               app.kubernetes.io/component: database
               environment: prod
       ports:
@@ -65,7 +65,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: pacman
+      app.kubernetes.io/name: mongodb
       app.kubernetes.io/component: database
       environment: prod
   policyTypes:
@@ -75,7 +75,7 @@ spec:
         - podSelector:
             matchLabels:
               app.kubernetes.io/name: pacman
-              app.kubernetes.io/component: frontend
+              app.kubernetes.io/component: application
               environment: prod
       ports:
         - protocol: TCP

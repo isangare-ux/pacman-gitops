@@ -11,7 +11,6 @@ labels:
   - pairs:
       app.kubernetes.io/instance: pacman-prod  # Eindeutige Instanz-ID dieser Bereitstellung (grenzt prod von dev ab)
       environment: prod                         # Kennzeichnet die Umgebung als Produktion
-    includeTemplates: true                      # Labels auch ins Pod-Template übernehmen, damit NetworkPolicy-podSelectoren auf "environment: prod" greifen
 
 replicas:
   - name: pacman
@@ -20,4 +19,24 @@ replicas:
 images:
   - name: ghcr.io/isangare-ux/pacman-app
     newTag: dfe16c3c188e5011a8fa91324524fb63aaf91a91
+
+# Ergänzt "environment: prod" gezielt nur im Pod-Template (für NetworkPolicy-podSelectoren).
+# Bewusst als JSON6902-Patch statt "includeTemplates: true" im labels-Block, da Letzteres
+# auch volumeClaimTemplates[].metadata.labels verändert hätte – ein bei StatefulSets
+# unveränderliches Feld, das den Argo-CD-Sync mit "field is immutable" hätte fehlschlagen lassen.
+patches:
+  - target:
+      kind: Deployment
+      name: pacman
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/environment
+        value: prod
+  - target:
+      kind: StatefulSet
+      name: mongodb
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/labels/environment
+        value: prod
     
