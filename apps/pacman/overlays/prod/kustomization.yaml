@@ -11,6 +11,7 @@ labels:
   - pairs:
       app.kubernetes.io/instance: pacman-prod  # Eindeutige Instanz-ID dieser Bereitstellung (grenzt prod von dev ab)
       environment: prod                         # Kennzeichnet die Umgebung als Produktion
+    includeTemplates: true                      # Labels auch ins Pod-Template übernehmen, damit NetworkPolicy-podSelectoren auf "environment: prod" greifen
 
 replicas:
   - name: pacman

@@ -3,9 +3,7 @@ kind: NetworkPolicy
 metadata:
   name: default-deny-prod
 spec:
-  podSelector:
-    matchLabels:
-      environment: prod
+  podSelector: {}
   policyTypes:
     - Ingress
     - Egress
