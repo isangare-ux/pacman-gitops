@@ -29,3 +29,15 @@ labels:
 replicas:
   - name: pacman
     count: 1
+
+# Umgebungsspezifische Anpassung des Ingress-Hostnamens.
+# Die Base verwendet pacman.local für Produktion.
+# Im Dev-Overlay wird dieser Wert auf pacman-dev.local geändert.
+patches:
+  - target:
+      kind: Ingress
+      name: pacman
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: pacman-dev.local
