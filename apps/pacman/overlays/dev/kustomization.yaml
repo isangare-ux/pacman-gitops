@@ -41,10 +41,3 @@ patches:
       - op: replace
         path: /spec/rules/0/host
         value: pacman-dev.local
-
-  # Der HPA aus der base ist auf die produktive Grundlast (minReplicas: 3)
-  # ausgelegt und würde in Dev die bewusst niedrige Einzel-Instanz
-  # (replicas: count 1, siehe oben) sofort wieder auf 3 hochskalieren.
-  # Autoscaling ist in dieser Test-/Dev-Umgebung nicht vorgesehen, daher
-  # wird die Ressource hier gezielt per Patch entfernt.
-  - path: hpa-delete-patch.yaml
