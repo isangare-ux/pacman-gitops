@@ -1,12 +1,19 @@
+# Begrenzt den gesamten Ressourcenverbrauch aller Pods/PVCs im Namespace,
+# um einzelne Anwendungen (z. B. Fehlkonfigurationen) am Verbrauch aller
+# Cluster-Ressourcen zu hindern (Noisy-Neighbor-Schutz).
 apiVersion: v1
 kind: ResourceQuota
 metadata:
   name: pacman-namespace-quota
 spec:
   hard:
+    # Summe aller CPU-/Memory-Requests im Namespace
     requests.cpu: 750m
     requests.memory: 768Mi
+    # Summe aller CPU-/Memory-Limits im Namespace
     limits.cpu: "2"
     limits.memory: 1536Mi
+    # Maximale Anzahl gleichzeitig laufender Pods
     pods: "6"
+    # Maximale Anzahl an PersistentVolumeClaims
     persistentvolumeclaims: "2"
