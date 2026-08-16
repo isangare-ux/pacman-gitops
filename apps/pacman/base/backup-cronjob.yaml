@@ -7,7 +7,8 @@ metadata:
     app.kubernetes.io/component: backup
 
 spec:
-  schedule: "0 2 * * *"
+  schedule: "0 15 * * *"
+  timeZone: "Europe/Berlin"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -81,7 +82,7 @@ spec:
 
               resources:
                 requests:
-                  cpu: 25m
+                  cpu: 50m
                   memory: 64Mi
                 limits:
                   cpu: 200m
