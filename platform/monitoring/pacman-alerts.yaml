@@ -1,0 +1,42 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pacman-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+    app.kubernetes.io/name: pacman-alerts
+    app.kubernetes.io/part-of: pacman
+spec:
+  groups:
+    - name: pacman.rules
+      rules:
+        - alert: PacmanReplicasUnavailable
+          expr: |
+            kube_deployment_status_replicas_unavailable{
+              namespace=~"pacman-dev|pacman-prod",
+              deployment="pacman"
+            } > 0
+          for: 1m
+          labels:
+            severity: warning
+            service: pacman
+          annotations:
+            summary: "Pacman-Replikat nicht verfügbar"
+            description: "Im Namespace {{ $labels.namespace }} ist mindestens ein Pacman-Replikat seit mindestens einer Minute nicht verfügbar."
+
+        - alert: PacmanContainerRestarts
+          expr: |
+            increase(
+              kube_pod_container_status_restarts_total{
+                namespace=~"pacman-dev|pacman-prod",
+                container="pacman"
+              }[5m]
+            ) >= 2
+          for: 1m
+          labels:
+            severity: warning
+            service: pacman
+          annotations:
+            summary: "Wiederholte Neustarts des Pacman-Containers"
+            description: "Der Pacman-Container im Namespace {{ $labels.namespace }} wurde innerhalb von fünf Minuten mindestens zweimal neu gestartet."
