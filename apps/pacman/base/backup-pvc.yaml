@@ -1,0 +1,32 @@
+# Dedizierter PersistentVolumeClaim für MongoDB-Backups.
+#
+# Dieser PVC ist bewusst vom MongoDB-Daten-PVC getrennt.
+# Die Datenbank läuft auf dem durch das StatefulSet erzeugten PVC
+# "mongodb-data-mongodb-0". Zeitgestempelte mongodump-Sicherungen
+# werden dagegen auf diesem separaten Backup-PVC gespeichert.
+#
+# Da die Ressource Bestandteil der Kustomize-Base ist, wird hier
+# kein Namespace fest eingetragen. Der jeweilige Namespace wird
+# durch die Dev-/Prod-Overlays gesetzt.
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+
+metadata:
+  name: mongodb-backup
+
+spec:
+  # Docker Desktop stellt die StorageClass "hostpath" bereit.
+  storageClassName: hostpath
+
+  # Das Volume wird jeweils von einem Backup-/Restore-Pod
+  # auf einem Node eingebunden.
+  accessModes:
+    - ReadWriteOnce
+
+  resources:
+    requests:
+      # Größer als die aktuell belegte MongoDB-Datenmenge,
+      # damit mehrere zeitgestempelte Sicherungen gespeichert
+      # werden können.
+      storage: 2Gi
