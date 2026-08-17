@@ -1,0 +1,170 @@
+AP26 - Betriebsautomatisierung und Diagnosewerkzeuge
+Wichtige Betriebsbefehle für den Betrieb der Pacman-Anwendung
+==============================================================
+
+Format je Eintrag:
+Befehl | Zweck | Risiko | Erwartete Ausgabe
+
+--------------------------------------------------------------
+
+1. kubectl get pods -n pacman-dev
+   Zweck: Übersicht über laufende Pods im Dev-Namespace
+   Risiko: keines (lesend)
+   Erwartete Ausgabe: Liste der Pods mit Status, Restarts, Alter
+
+2. kubectl get pods -n pacman-prod
+   Zweck: Übersicht über laufende Pods im Prod-Namespace
+   Risiko: keines (lesend)
+   Erwartete Ausgabe: Liste der Pods mit Status, Restarts, Alter
+
+3. kubectl describe pod <pod-name> -n pacman-dev
+   Zweck: Detailanalyse eines einzelnen Pods (Events, Zustand, Container)
+   Risiko: keines (lesend)
+   Erwartete Ausgabe: Detailbeschreibung inkl. Events
+
+4. kubectl logs <pod-name> -n pacman-dev
+   Zweck: Laufzeitlogs eines Containers einsehen
+   Risiko: keines (lesend); ggf. Anwendungsdaten in Logs beachten
+   Erwartete Ausgabe: Log-Zeilen des Containers
+
+5. kubectl logs <pod-name> -n pacman-dev --previous
+   Zweck: Logs des vorherigen Container-Starts (z. B. nach Crash) einsehen
+   Risiko: keines (lesend)
+   Erwartete Ausgabe: Log-Zeilen des vorherigen Containerlaufs
+
+6. kubectl get deployments -n pacman-dev
+   Zweck: Übersicht über Deployment-Status (Replicas, Verfügbarkeit)
+   Risiko: keines (lesend)
+   Erwartete Ausgabe: Deployment-Liste mit READY/UP-TO-DATE/AVAILABLE
+
+7. kubectl rollout status deployment/pacman -n pacman-dev
+   Zweck: Fortschritt eines laufenden Rollouts prüfen
+   Risiko: keines (lesend)
+   Erwartete Ausgabe: Rollout-Fortschritt oder "successfully rolled out"
+
+8. kubectl rollout restart deployment/pacman -n pacman-dev
+   Zweck: Kontrollierten Neustart aller Pods eines Deployments auslösen
+   Risiko: mittel - kurzzeitige Nichtverfügbarkeit möglich, je nach Replica-Anzahl
+   Erwartete Ausgabe: Bestätigung "deployment.apps/pacman restarted"
+
+9. kubectl get statefulsets -n pacman-dev
+   Zweck: Übersicht über StatefulSet-Status (z. B. MongoDB)
+   Risiko: keines (lesend)
+   Erwartete Ausgabe: StatefulSet-Liste mit READY-Status
+
+10. kubectl get svc -n pacman-dev
+    Zweck: Übersicht über Services und deren ClusterIP/Ports
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Service-Liste mit TYPE, CLUSTER-IP, PORT(S)
+
+11. kubectl get ingress -n pacman-dev
+    Zweck: Übersicht über Ingress-Regeln und externe Erreichbarkeit
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Ingress-Liste mit Hosts und Adressen
+
+12. kubectl get pvc -n pacman-dev
+    Zweck: Übersicht über PersistentVolumeClaims und deren Bindungsstatus
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: PVC-Liste mit STATUS "Bound"
+
+13. kubectl get hpa -n pacman-dev
+    Zweck: Übersicht über automatische Skalierung (aktuelle/Ziel-Replicas)
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: HPA-Liste mit TARGETS und REPLICAS
+
+14. kubectl get jobs -n pacman-dev
+    Zweck: Übersicht über abgeschlossene/laufende Jobs (z. B. Backup, Restore)
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Job-Liste mit COMPLETIONS-Status
+
+15. kubectl get cronjob mongodb-backup -n pacman-dev
+    Zweck: Zeitplan und Status des Backup-CronJobs prüfen
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: SCHEDULE, TIMEZONE, SUSPEND-Status
+
+16. kubectl create job --from=cronjob/mongodb-backup manual-backup-test -n pacman-dev
+    Zweck: Manuellen Testlauf des Backup-CronJobs außerhalb des Zeitplans auslösen
+    Risiko: mittel - erzeugt reale Backup-Last und Datei auf dem Backup-PVC
+    Erwartete Ausgabe: Bestätigung "job.batch/manual-backup-test created"
+
+17. kubectl get events -n pacman-dev --field-selector type=Warning --sort-by=.lastTimestamp
+    Zweck: Warnungen im Namespace chronologisch einsehen
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Liste der Warning-Events, neueste zuletzt
+
+18. kubectl get application pacman-dev -n argocd
+    Zweck: Argo-CD-Synchronisationsstatus der Dev-Anwendung prüfen
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: STATUS "Synced", HEALTH "Healthy"
+
+19. argocd app sync pacman-dev
+    Zweck: Manuelle Argo-CD-Synchronisation anstoßen
+    Risiko: mittel - wendet den aktuellen Git-Stand sofort auf den Cluster an
+    Erwartete Ausgabe: Sync-Log mit Ergebnis "Synced"
+
+20. kubectl top pods -n pacman-dev
+    Zweck: Aktuelle CPU-/Memory-Auslastung der Pods prüfen (benötigt metrics-server)
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Tabelle mit CPU(cores) und MEMORY(bytes) je Pod
+
+21. kubectl get resourcequota -n pacman-dev
+    Zweck: Auslastung der Namespace-Ressourcenlimits prüfen
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Übersicht USED/HARD je Ressource
+
+22. kubectl config current-context
+    Zweck: Aktiven Kubernetes-Kontext vor kritischen Operationen verifizieren
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Name des aktiven Kontextes
+
+23. kubectl config get-contexts
+    Zweck: Verfügbare Kubernetes-Kontexte auflisten
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Tabelle aller konfigurierten Kontexte
+
+24. kubectl get secret mongodb-credentials -n pacman-dev
+    Zweck: Vorhandensein des Secrets prüfen (nur Metadaten, keine Werte)
+    Risiko: gering - bei versehentlicher Nutzung von -o yaml würden Base64-Werte sichtbar;
+            daher ausschließlich ohne -o yaml/json verwenden
+    Erwartete Ausgabe: Secret-Name, TYPE, DATA-Anzahl (keine Klartextwerte)
+
+25. git status
+    Zweck: Lokalen Änderungsstand des GitOps-Repositories prüfen
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Branch-Name, Working-Tree-Status
+
+26. git log --oneline -10
+    Zweck: Letzte Commits zur Nachvollziehbarkeit prüfen
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Liste der letzten 10 Commits mit Kurzbeschreibung
+
+27. kubectl delete pod <pod-name> -n pacman-dev
+    Zweck: Einzelnen Pod gezielt neu starten lassen (Deployment erzeugt Ersatz-Pod)
+    Risiko: hoch - bei falscher Namensangabe oder in StatefulSets kann es zu
+            kurzzeitigem Datenzugriffsverlust kommen; nur gezielt einsetzen
+    Erwartete Ausgabe: Bestätigung "pod deleted", neuer Pod wird automatisch erstellt
+
+28. df -h .
+    Zweck: Freien Speicherplatz vor Diagnose-/Backup-Läufen prüfen
+    Risiko: keines (lesend)
+    Erwartete Ausgabe: Belegter/freier Speicherplatz des aktuellen Dateisystems
+
+29. ./scripts/preflight-check.sh
+    Zweck: Automatisierte Prüfung der Betriebsvoraussetzungen vor Cluster-Operationen
+    Risiko: keines (rein lesende Prüfungen)
+    Erwartete Ausgabe: OK/WARN/FAIL je Prüfpunkt, Exit Code 0 bei Erfolg
+
+30. ./scripts/cluster-status.sh -n pacman-dev
+    Zweck: Kompakten Statusüberblick über alle relevanten Ressourcen erzeugen
+    Risiko: keines (rein lesend)
+    Erwartete Ausgabe: Gegliederte Übersicht je Ressourcentyp
+
+31. ./scripts/collect-diagnostics.sh -n pacman-dev
+    Zweck: Zeitgestempelte Diagnosedaten für Fehleranalyse sammeln
+    Risiko: gering - legt lokale Dateien an, keine Cluster-Änderung
+    Erwartete Ausgabe: Neuer Ordner unter ./diagnostics/<timestamp>/ mit gesammelten Daten
+
+--------------------------------------------------------------
+Hinweis: Secret-Werte, Tokens, Passwörter und vollständige kubeconfig-Inhalte
+dürfen mit keinem der oben genannten Befehle im Klartext ausgegeben oder in
+Logs/Diagnosedaten gespeichert werden.
