@@ -42,6 +42,27 @@ patches:
     kind: Ingress
     name: pacman
 - path: hpa-delete-patch.yaml
+
+# D05-Fehlersimulation (AP28): MongoDB-Datenvolume temporär readOnly
+# mounten, um einen Startfehler nach Neustart zu reproduzieren.
+# Wird nach der Fehleranalyse über einen separaten Fix wieder entfernt.
+- patch: |-
+    apiVersion: apps/v1
+    kind: StatefulSet
+    metadata:
+      name: mongodb
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongodb
+            volumeMounts:
+            - name: mongodb-data
+              mountPath: /data/db
+              readOnly: true
+  target:
+    kind: StatefulSet
+    name: mongodb
 images:
 - name: ghcr.io/isangare-ux/pacman-app
   newName: ghcr.io/isangare-ux/pacman-app
