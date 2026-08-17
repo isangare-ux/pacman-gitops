@@ -45,4 +45,4 @@ patches:
 images:
 - name: ghcr.io/isangare-ux/pacman-app
   newName: ghcr.io/isangare-ux/pacman-app
-  newTag: ap28-d02-image-existiert-nicht
+  newTag: 183fa6e06182984f2c975dca828aa8168d089481
