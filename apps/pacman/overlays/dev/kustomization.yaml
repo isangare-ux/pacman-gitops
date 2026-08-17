@@ -41,6 +41,13 @@ patches:
   target:
     kind: Ingress
     name: pacman
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/readinessProbe/httpGet/path
+      value: /ap28-d03-readiness-fehler
+  target:
+    kind: Deployment
+    name: pacman
 - path: hpa-delete-patch.yaml
 images:
 - name: ghcr.io/isangare-ux/pacman-app
