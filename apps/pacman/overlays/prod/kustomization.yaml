@@ -85,3 +85,17 @@ patches:
       - op: replace
         path: /spec/limits/0/max/memory
         value: "1Gi"
+
+  # AP28 D09 Testfall: bewusst falscher MongoDB-Service-Hostname fuer den
+  # Backup-CronJob. Kein Secret/Passwort betroffen - nur der (nicht
+  # vertrauliche) Hostname-Wert. mongodump kann den Host nicht aufloesen/
+  # erreichen und der Job schlaegt kontrolliert fehl, ohne PVC-Daten oder
+  # vorhandene Backups zu veraendern.
+  # Ursprünglicher Wert (siehe base/backup-cronjob.yaml): MONGO_HOST=mongodb
+  - target:
+      kind: CronJob
+      name: mongodb-backup
+    patch: |-
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/env/0/value
+        value: mongodb-nonexistent-d09
