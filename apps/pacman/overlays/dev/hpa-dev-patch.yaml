@@ -1,0 +1,27 @@
+# HPA-Override fuer die Dev-Umgebung.
+#
+# Die base (apps/pacman/base/hpa.yaml) ist auf Produktionsanforderungen
+# ausgelegt (minReplicas: 3, maxReplicas: 6). Fuer die kleine lokale
+# Dev-Umgebung werden hier nur minReplicas/maxReplicas an die tatsaechliche
+# Dev-Kapazitaet angepasst (1/3) - der CPU-Zielwert (averageUtilization: 60,
+# identisch zur base) bleibt unveraendert korrekt.
+#
+# Hinweis (AP28 D07): Dieser Patch ersetzte zwischenzeitlich hpa-delete-patch.yaml
+# (HPA war in Dev zuvor komplett deaktiviert) und wurde fuer einen
+# kontrollierten Fehlertest kurzzeitig auf averageUtilization: 1000 gesetzt
+# (rechnerisch unerreichbar bei CPU-Request 100m / Limit 500m). Nach
+# erfolgreichem Fehlernachweis auf den korrekten Wert 60 zurueckgesetzt.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pacman
+spec:
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
