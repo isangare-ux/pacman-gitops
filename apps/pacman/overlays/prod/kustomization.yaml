@@ -17,8 +17,13 @@ replicas:
     count: 3
 
 images:
+  # AP28 D08 Testfall: bewusst fehlerhaftes Image fuer den GitOps-
+  # Rollback-Test. Vorheriger funktionierender Stand (fuer den Rollback
+  # dokumentiert):
+  #   Tag:    2ae1f2e41c992fdbb81107aac79e66afe7ef2ea1
+  #   Digest: sha256:8a30554bf682a9a326f1227ec0e3978eab03b982bbe41e0d13ab1aad21d379f6
   - name: ghcr.io/isangare-ux/pacman-app
-    newTag: 2ae1f2e41c992fdbb81107aac79e66afe7ef2ea1
+    newTag: 6f0072394d8cf0f93559f4e6ed6de3eddfdcbbf2
 
 # Ergänzt "environment: prod" gezielt nur im Pod-Template (für NetworkPolicy-podSelectoren).
 # Bewusst als JSON6902-Patch statt "includeTemplates: true" im labels-Block, da Letzteres
