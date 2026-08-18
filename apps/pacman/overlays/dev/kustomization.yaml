@@ -26,8 +26,12 @@ labels:
     app.kubernetes.io/instance: pacman-dev
     environment: dev
 
+# DevOps-Fall D12 (Testfall, absichtlich): Skalierung auf 3 Replicas fuer
+# Kundenworkshop. limits.cpu der ResourceQuota (2 Cores) laesst neben
+# MongoDB (1000m Limit) nur 2 Pacman-Pods a 500m Limit zu -> der 3. Pod
+# soll kontrolliert an "exceeded quota" scheitern.
 replicas:
-- count: 1
+- count: 3
   name: pacman
 
 # Umgebungsspezifische Anpassung des Ingress-Hostnamens.
