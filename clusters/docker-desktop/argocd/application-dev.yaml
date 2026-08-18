@@ -36,3 +36,17 @@ spec:
       # Legt den Namespace an, falls er noch nicht existiert (hier bereits
       # zusätzlich über overlays/dev/namespace.yaml als Ressource verwaltet).
       - CreateNamespace=true
+
+  # AP28 D07: Das Pacman-Deployment wird per HorizontalPodAutoscaler
+  # skaliert (siehe apps/pacman/overlays/dev/hpa-dev-patch.yaml). Ohne diese
+  # Ausnahme setzt Self-Heal die vom HPA gesetzte Replica-Zahl bei jedem
+  # Reconcile-Zyklus sofort auf den in Kustomize festgelegten Wert zurueck,
+  # da Git und HPA sonst konkurrierend um spec.replicas kaempfen wuerden.
+  # Das ist die von Argo CD offiziell empfohlene Loesung fuer HPA-verwaltete
+  # Ressourcen (siehe Argo-CD-Doku "Application Sync Options" / Diffing).
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: pacman
+      jsonPointers:
+        - /spec/replicas
