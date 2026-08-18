@@ -1,0 +1,32 @@
+# D07 Testfall (AP28): "HPA skaliert trotz Last nicht."
+#
+# Ursprünglicher Zustand: Der HPA war im Dev-Overlay komplett deaktiviert
+# (siehe hpa-delete-patch.yaml, weiterhin im Repo vorhanden fuer die exakte
+# Wiederherstellung). Fuer diesen Test wird die HPA aus der base stattdessen
+# aktiviert, aber mit einem bewusst unrealistischen CPU-Zielwert versehen.
+#
+# Rechnung: CPU-Request des Pacman-Containers = 100m, CPU-Limit = 500m
+# (siehe base/deployment.yaml). Die maximal ueberhaupt erreichbare
+# averageUtilization ist damit durch das Limit gedeckelt bei
+# 500 / 100 = 500 %. Ein Zielwert von 1000 % kann somit unter keiner
+# Last erreicht werden - der HPA berechnet zwar CPU-Metriken, skaliert
+# aber unabhaengig von der tatsaechlichen Last niemals ueber minReplicas
+# hinaus.
+#
+# minReplicas/maxReplicas bewusst klein gehalten (statt der Prod-Werte
+# 3/6 aus der base), um zur bisherigen Dev-Replica-Zahl (1) zu passen und
+# die kleine lokale Testumgebung nicht unnoetig zu belasten.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pacman
+spec:
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 1000
