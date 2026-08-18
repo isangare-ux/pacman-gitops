@@ -86,6 +86,22 @@ patches:
         path: /spec/limits/0/max/memory
         value: "1Gi"
 
+  # Fix (gefunden waehrend AP28 D09): base/backup-cronjob.yaml fordert nur
+  # cpu: 50m / memory: 64Mi an, was unterhalb des Prod-LimitRange-Minimums
+  # (100m / 128Mi, siehe oben) liegt. Dadurch konnte der Backup-Job in Prod
+  # ueberhaupt nie einen Pod erzeugen (FailedCreate). Unabhaengig vom
+  # D09-Testfall noetig, damit der Job in Prod grundsaetzlich lauffaehig ist.
+  - target:
+      kind: CronJob
+      name: mongodb-backup
+    patch: |-
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/resources/requests/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/jobTemplate/spec/template/spec/containers/0/resources/requests/memory
+        value: "128Mi"
+
   # AP28 D09 Testfall: bewusst falscher MongoDB-Service-Hostname fuer den
   # Backup-CronJob. Kein Secret/Passwort betroffen - nur der (nicht
   # vertrauliche) Hostname-Wert. mongodump kann den Host nicht aufloesen/
