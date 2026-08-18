@@ -1,0 +1,43 @@
+# DevOps-Fall D13 (Testfall, absichtlich): kontrolliert fehlerhafte
+# NetworkPolicy nur fuer pacman-dev.
+#
+# Hintergrund: die base-Policies (allow-pacman-to-mongodb,
+# allow-mongodb-from-pacman) selektieren ueber "environment: prod" und
+# greifen dadurch in Dev ohnehin nicht (Dev-Pods tragen dieses Label nicht).
+# Fuer den Least-Privilege-Audit-Testfall wird hier zusaetzlich eine
+# Dev-spezifische Egress-Regel fuer Pacman ergaenzt - mit einem bewusst
+# falschen Zielport (27018 statt 27017 fuer MongoDB). DNS bleibt bewusst
+# erlaubt (Ports 53/UDP+TCP zu kube-dns), damit ausschliesslich die
+# Datenbankverbindung betroffen ist.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pacman-to-mongodb-dev
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: pacman
+      app.kubernetes.io/component: application
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: mongodb
+              app.kubernetes.io/component: database
+      ports:
+        - protocol: TCP
+          port: 27018 # FALSCH (Testfall D13): korrekter MongoDB-Port ist 27017

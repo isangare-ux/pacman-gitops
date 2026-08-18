@@ -16,6 +16,7 @@ namespace: pacman-dev
 resources:
 - namespace.yaml
 - ../../base
+- networkpolicy-pacman-to-mongodb-dev-patch.yaml
 
 # Zusätzliches Label, das über commonLabels aus der base hinaus gesetzt
 # wird. Damit lassen sich dev-Ressourcen im Cluster klar von prod
