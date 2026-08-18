@@ -42,6 +42,19 @@ patches:
     kind: Ingress
     name: pacman
 - path: hpa-dev-patch.yaml
+
+# AP28 D10 Testfall: bewusst ungueltiger Liveness-Probe-Pfad, nur in Dev.
+# Urspruenglicher Wert (siehe base/deployment.yaml): livenessProbe.httpGet.path=/
+# Fuehrt dazu, dass die Liveness-Probe wiederholt fehlschlaegt und
+# Kubernetes den Pacman-Container neu startet (Restart-Alert-Test).
+# Betrifft nur den Container-Prozess-Neustart, keine Daten/MongoDB/Secrets.
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/livenessProbe/httpGet/path
+      value: /d10-test-ungueltiger-liveness-pfad
+  target:
+    kind: Deployment
+    name: pacman
 images:
 - name: ghcr.io/isangare-ux/pacman-app
   newName: ghcr.io/isangare-ux/pacman-app
