@@ -41,7 +41,7 @@ patches:
   target:
     kind: Ingress
     name: pacman
-- path: hpa-drift-patch.yaml
+- path: hpa-dev-patch.yaml
 images:
 - name: ghcr.io/isangare-ux/pacman-app
   newName: ghcr.io/isangare-ux/pacman-app
