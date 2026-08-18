@@ -18,3 +18,20 @@ prometheus-node-exporter:
   hostRootFsMount:
     enabled: true
     mountPropagation: ""
+
+# DevOps-Fall D15 (Testfall, absichtlich): kontrolliert falscher
+# kube-state-metrics-Selector nur fuer den Monitoring-Testbereich.
+#
+# Hintergrund: Standardisierung der Monitoring-Labels/-Selektoren. Pacman
+# hat keinen eigenen ServiceMonitor/PodMonitor (kein /metrics-Endpoint) -
+# die Sichtbarkeit laeuft ausschliesslich ueber kube-state-metrics
+# (cluster-weiter Job) + PromQL-Filter auf "namespace". Der reale,
+# unterstuetzte Selector-Mechanismus dafuer ist der Namespace-Denylist
+# von kube-state-metrics (--namespaces-denylist). Mit "pacman-dev" hier
+# wird gezielt nur der Dev-Namespace aus der Objekterfassung ausgeschlossen:
+# Prometheus/kube-state-metrics bleiben "up", aber alle kube_*-Metriken
+# (Pods, Deployment-Status, Container-Restarts) fuer pacman-dev
+# verschwinden - waehrend Pacman selbst und pacman-prod unveraendert
+# weiterlaufen.
+kube-state-metrics:
+  namespacesDenylist: "pacman-dev"
