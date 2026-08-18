@@ -42,6 +42,25 @@ patches:
     kind: Ingress
     name: pacman
 - path: hpa-dev-patch.yaml
+
+# AP28 D11 Testfall: simuliert eine unvollstaendige Secret-Rotation.
+# Pacman referenziert temporaer ein separates Test-Secret
+# (mongodb-credentials-d11-test) mit bewusst nicht passenden
+# Zugangsdaten, statt des produktiv genutzten Secrets
+# "mongodb-credentials" (bleibt unveraendert, wird von MongoDB selbst
+# weiterhin verwendet). Fuehrt zu MongoDB-Authentifizierungsfehlern bei
+# Pacman, MongoDB selbst laeuft unveraendert weiter. Keine Secret-Werte
+# in diesem Patch, nur der referenzierte Secret-Name.
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/3/valueFrom/secretKeyRef/name
+      value: mongodb-credentials-d11-test
+    - op: replace
+      path: /spec/template/spec/containers/0/env/4/valueFrom/secretKeyRef/name
+      value: mongodb-credentials-d11-test
+  target:
+    kind: Deployment
+    name: pacman
 images:
 - name: ghcr.io/isangare-ux/pacman-app
   newName: ghcr.io/isangare-ux/pacman-app
