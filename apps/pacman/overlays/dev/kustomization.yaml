@@ -42,7 +42,6 @@ patches:
     kind: Ingress
     name: pacman
 - path: hpa-dev-patch.yaml
-- path: backup-cronjob-wrong-host-patch.yaml
 images:
 - name: ghcr.io/isangare-ux/pacman-app
   newName: ghcr.io/isangare-ux/pacman-app
