@@ -45,4 +45,4 @@ patches:
 images:
 - name: ghcr.io/isangare-ux/pacman-app
   newName: ghcr.io/isangare-ux/pacman-app
-  newTag: 183fa6e06182984f2c975dca828aa8168d089481
+  newTag: ac7aa707ef75e3297e7f6a9c2f7f922094609279
