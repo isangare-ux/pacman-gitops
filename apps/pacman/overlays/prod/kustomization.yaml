@@ -18,7 +18,7 @@ replicas:
 
 images:
   - name: ghcr.io/isangare-ux/pacman-app
-    newTag: 2ae1f2e41c992fdbb81107aac79e66afe7ef2ea1
+    newTag: a4c49abd81d9f5c4472b90110cb3fca5ae0348c2
 
 # Ergänzt "environment: prod" gezielt nur im Pod-Template (für NetworkPolicy-podSelectoren).
 # Bewusst als JSON6902-Patch statt "includeTemplates: true" im labels-Block, da Letzteres
