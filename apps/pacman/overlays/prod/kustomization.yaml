@@ -6,6 +6,7 @@ namespace: pacman-prod
 resources:
   - namespace.yaml
   - ../../base
+  - pdb.yaml
 
 labels:
   - pairs:

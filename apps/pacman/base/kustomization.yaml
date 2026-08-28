@@ -21,7 +21,6 @@ resources:
   - serviceaccount.yaml
   - ingress.yaml
   - hpa.yaml
-  - pdb.yaml
   - networkpolicy.yaml
   - limitrange.yaml
   - mongodb-service.yaml
