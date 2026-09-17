@@ -1,0 +1,25 @@
+# ingress-nginx Helm-Chart-Werte
+# Chart: ingress-nginx/ingress-nginx
+# Chart-Version: 4.15.1
+# App-Version (ingress-nginx): 1.15.1
+# Repository: https://kubernetes.github.io/ingress-nginx
+#
+# HINWEIS: Der Helm-Release "ingress-nginx" (Namespace ingress-nginx) läuft
+# aktuell manuell installiert (helm install/upgrade), NICHT über eine
+# ArgoCD-Application. Diese Datei dokumentiert die im Cluster tatsächlich
+# verwendeten Werte (per `helm get values ingress-nginx -n ingress-nginx`
+# ausgelesen), damit der Ist-Zustand GitOps-seitig nachvollziehbar bleibt.
+
+controller:
+  admissionWebhooks:
+    enabled: true
+  ingressClassResource:
+    default: false
+    enabled: true
+    name: nginx
+  resources:
+    requests:
+      cpu: 100m
+      memory: 90Mi
+  service:
+    type: LoadBalancer

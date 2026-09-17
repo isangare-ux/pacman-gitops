@@ -1,3 +1,11 @@
+# Strategic-Merge-Patch zum Entfernen der HPA-Ressource aus dem
+# Dev-Overlay ($patch: delete). Deaktivierte in Dev vollständig das
+# Autoscaling, statt nur minReplicas/maxReplicas anzupassen.
+#
+# NICHT MEHR AKTIV: In overlays/dev/kustomization.yaml wird stattdessen
+# hpa-dev-patch.yaml eingebunden, das die HPA bestehen lässt und nur die
+# Dev-Kapazität anpasst (siehe Hinweis AP28 D07 dort). Diese Datei bleibt
+# als Referenz auf die frühere Konfiguration erhalten.
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

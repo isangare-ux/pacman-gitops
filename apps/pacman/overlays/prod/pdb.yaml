@@ -1,3 +1,12 @@
+# PodDisruptionBudget nur für Prod (siehe overlays/prod/kustomization.yaml,
+# resources: pdb.yaml) — nicht Teil der base, da Dev mit nur 1 Replika
+# (overlays/dev, replicas: count 1) durch minAvailable sonst jede
+# freiwillige Disruption (z. B. Node-Drain) blockieren würde.
+#
+# minAvailable: 2 passt zu den 3 Prod-Replikas (overlays/prod/kustomization.yaml,
+# replicas: count 3): stellt sicher, dass bei geplanten Unterbrechungen
+# (Node-Drain, Cluster-Upgrade) mindestens 2 von 3 Pods erreichbar bleiben,
+# lässt aber weiterhin gezielte Wartung an einem Pod zu.
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
@@ -6,6 +15,7 @@ metadata:
     app.kubernetes.io/name: pacman
     app.kubernetes.io/component: frontend
 spec:
+#Bei freiwilligen Unterbrechungen müssen mindestens 2 Pacman-Pods verfügbar bleiben.
   minAvailable: 2
   selector:
     matchLabels:

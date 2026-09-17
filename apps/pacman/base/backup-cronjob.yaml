@@ -1,3 +1,6 @@
+# Tägliches MongoDB-Backup der Pacman-Datenbank per mongodump.
+# Ablage als gzip-komprimiertes Archiv inkl. sha256-Prüfsumme auf dem
+# mongodb-backup-PVC; Backups älter als 7 Tage werden automatisch gelöscht.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
