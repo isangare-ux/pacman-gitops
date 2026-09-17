@@ -1,0 +1,122 @@
+# Template für einen kontrollierten MongoDB-Restore der Collection
+# pacman.highscore aus einem vorhandenen mongodump-Backup-Archiv.
+#
+# WICHTIG: Diese Datei wird bewusst NICHT in kustomization.yaml als
+# resource eingebunden (siehe secret.example.yaml für dasselbe Muster).
+# Ein Restore-Job mit --drop darf nicht bei jedem Argo-CD-Sync
+# automatisch (erneut) ausgeführt werden — ein Job ist in Kubernetes
+# zudem unveränderlich (immutable spec), sodass ein "lebendig"
+# eingebundener Restore-Job ohnehin nicht wiederverwendbar wäre.
+#
+# Verwendung:
+#   1. Diese Datei kopieren bzw. als Grundlage für einen einmaligen,
+#      eindeutig benannten Job verwenden (z. B. mit
+#      `kubectl apply -f -` nach Anpassung von metadata.name und
+#      BACKUP_FILE), NICHT diese Datei selbst unverändert anwenden.
+#   2. name (Zeile "name: mongodb-restore-<eindeutige-kennung>") sowie
+#      BACKUP_FILE (Pfad der zu restaurierenden Archiv-Datei auf dem
+#      mongodb-backup-PVC) vor dem Anwenden anpassen.
+#   3. Nach dem Lauf: Job-Status (Complete) UND das Job-Log prüfen
+#      ("N document(s) restored successfully, 0 document(s) failed"),
+#      anschließend read-only in MongoDB nachprüfen, dass die
+#      erwarteten Daten tatsächlich vorhanden sind. Ein Job-Status
+#      "Complete" allein ist KEIN ausreichender Restore-Nachweis.
+#
+# Dieses Muster wurde praktisch mehrfach erfolgreich verwendet, u. a.
+# für den Testfall IHK-RESTORE-UI-001 in pacman-dev (siehe
+# textdateien/finaler_betriebs_uebergabe_nachweis.txt, Abschnitt 9) und
+# stammt ursprünglich vom Job mongodb-restore-manual.
+#
+# --nsInclude="pacman.highscore" beschränkt den Restore ausschließlich
+# auf diese eine Collection; alle anderen Collections der Datenbank
+# pacman (z. B. userstats, ap17_persistenztest) bleiben unangetastet.
+# --drop ersetzt den vorherigen Inhalt von pacman.highscore vollständig
+# durch den Inhalt aus dem Backup-Archiv — vor dem Ausführen daher
+# immer prüfen, ob das beabsichtigt ist.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongodb-restore-<eindeutige-kennung>
+  labels:
+    app.kubernetes.io/component: restore
+    app.kubernetes.io/name: mongodb
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: restore
+        app.kubernetes.io/name: mongodb
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: mongodb-restore
+          image: mongo:4.4.30-focal
+          imagePullPolicy: IfNotPresent
+
+          env:
+            - name: MONGO_HOST
+              value: mongodb
+
+            - name: MONGO_DATABASE
+              value: pacman
+
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: app-username
+
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-credentials
+                  key: app-password
+
+            # Pfad der zu restaurierenden Backup-Datei auf dem
+            # mongodb-backup-PVC. Vor dem Anwenden anpassen.
+            - name: BACKUP_FILE
+              value: /backup/pacman-<TIMESTAMP>.archive.gz
+
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+
+              echo "Starte kontrollierten MongoDB-Restore"
+              echo "Backup-Datei: ${BACKUP_FILE}"
+              echo "Collection: pacman.highscore"
+
+              test -f "${BACKUP_FILE}"
+
+              mongorestore \
+                --host="${MONGO_HOST}" \
+                --port=27017 \
+                --username="${MONGO_USERNAME}" \
+                --password="${MONGO_PASSWORD}" \
+                --authenticationDatabase="${MONGO_DATABASE}" \
+                --archive="${BACKUP_FILE}" \
+                --gzip \
+                --nsInclude="pacman.highscore" \
+                --drop
+
+              echo "MongoDB-Restore erfolgreich abgeschlossen"
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /backup
+              readOnly: true
+
+      volumes:
+        - name: backup-storage
+          persistentVolumeClaim:
+            claimName: mongodb-backup
