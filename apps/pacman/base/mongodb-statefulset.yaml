@@ -58,6 +58,23 @@ spec:
         responsibility: devops
 
     spec:
+      # Pod-weiter SecurityContext: gilt für alle Container im Pod.
+      # fsGroup: 999 lässt Kubernetes das gemountete PVC (mongodb-data)
+      # beim Start automatisch auf die Gruppe 999 chownen/chmoden - das
+      # offizielle mongo-Image legt intern bereits einen Benutzer
+      # "mongodb" mit UID/GID 999 an (siehe /etc/passwd im Image) und
+      # erwartet unter /data/db genau diesen Besitzer. Ohne fsGroup
+      # bleibt ein frisch angelegtes PVC root-eigen und mongod schlägt
+      # als Nicht-Root-Benutzer mit "Attempted to create a lock file on
+      # a read-only directory" fehl (lokal mit "docker run --user 999:999"
+      # nachgestellt und bestätigt).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        fsGroup: 999
+        seccompProfile:
+          type: RuntimeDefault
+
       containers:
         - name: mongodb
 
@@ -65,6 +82,19 @@ spec:
           # sich Dev/Prod und die lokale Entwicklungsumgebung konsistent
           # verhalten (siehe textdateien/compose_config_nachweis.txt).
           image: mongo:4.4.30-focal
+
+          # Container-spezifischer SecurityContext, analog zu
+          # deployment.yaml. readOnlyRootFilesystem wird hier bewusst
+          # NICHT gesetzt: mongod schreibt zur Laufzeit u. a. Socket-
+          # und PID-Dateien außerhalb von /data/db (z. B. /tmp), was das
+          # offizielle Image ohne zusätzliche emptyDir-Mounts nicht
+          # unterstützt - anders als beim eigenen, dafür kontrollierten
+          # Pacman-Image.
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
 
           # Anders als beim Pacman-Image (deployment.yaml) ist dies kein
           # unveränderlicher Commit-SHA-Tag, sondern ein fest gewählter,
